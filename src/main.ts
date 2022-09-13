@@ -114,7 +114,7 @@ function main() {
     worleyShader.setTime(time);                                                     
     renderer.render(camera, worleyShader, [
       // icosphere,
-      square,
+      // square,
       //cube
     ]);
     renderer.render(camera, deformShader, [
