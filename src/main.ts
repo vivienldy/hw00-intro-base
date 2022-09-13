@@ -1,8 +1,10 @@
 import {vec3} from 'gl-matrix';
+import {vec4} from 'gl-matrix';
 const Stats = require('stats-js');
 import * as DAT from 'dat.gui';
 import Icosphere from './geometry/Icosphere';
 import Square from './geometry/Square';
+import Cube from './geometry/Cube';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
@@ -17,13 +19,17 @@ const controls = {
 
 let icosphere: Icosphere;
 let square: Square;
+let cube: Cube;
 let prevTesselations: number = 5;
+let time: number = 0;
 
 function loadScene() {
   icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, controls.tesselations);
   icosphere.create();
   square = new Square(vec3.fromValues(0, 0, 0));
   square.create();
+  cube = new Cube(vec3.fromValues(0, 0, 0));
+  cube.create();
 }
 
 function main() {
@@ -39,6 +45,10 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, 'Load Scene');
+  var palette = {
+    color: [ 255, 195, 75, 255 ], // RGB with alpha
+  };
+  gui.addColor(palette, 'color');
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -63,9 +73,27 @@ function main() {
     new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
   ]);
+  lambert.setGeometryColor(vec4.fromValues(palette.color[0]/255.0, palette.color[1]/255.0, 
+  palette.color[2]/255.0, palette.color[3]));
+
+  const customShader = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-noise-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-noise-frag.glsl')),
+  ])
+
+  const deformShader = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-deform-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-deform-frag.glsl')),
+  ])
+
+  const worleyShader = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-worley-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-worley-frag.glsl')),
+  ])
 
   // This function will be called every frame
   function tick() {
+    time = time + 1;
     camera.update();
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
@@ -76,9 +104,23 @@ function main() {
       icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
       icosphere.create();
     }
-    renderer.render(camera, lambert, [
+    lambert.setGeometryColor(vec4.fromValues(palette.color[0]/255.0, palette.color[1]/255.0,
+                                             palette.color[2]/255.0, palette.color[3]));
+    customShader.setGeometryColor(vec4.fromValues(palette.color[0]/255.0, palette.color[1]/255.0,
+                                             palette.color[2]/255.0, palette.color[3]));
+    deformShader.setGeometryColor(vec4.fromValues(palette.color[0]/255.0, palette.color[1]/255.0,
+                                             palette.color[2]/255.0, palette.color[3])); 
+    deformShader.setTime(time);  
+    worleyShader.setTime(time);                                                     
+    renderer.render(camera, worleyShader, [
+      // icosphere,
+      square,
+      //cube
+    ]);
+    renderer.render(camera, deformShader, [
       icosphere,
-      // square,
+      //square
+      //cube
     ]);
     stats.end();
 
