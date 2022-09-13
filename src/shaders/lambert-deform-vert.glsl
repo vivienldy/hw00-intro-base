@@ -30,6 +30,7 @@ in vec4 vs_Col;             // The array of vertex colors passed to the shader.
 out vec4 fs_Nor;            // The array of normals that has been transformed by u_ModelInvTr. This is implicitly passed to the fragment shader.
 out vec4 fs_LightVec;       // The direction in which our virtual light lies, relative to each vertex. This is implicitly passed to the fragment shader.
 out vec4 fs_Col;            // The color of each vertex. This is implicitly passed to the fragment shader.
+out vec4 fs_Pos;
 
 const vec4 lightPos = vec4(5, 5, 20, 1); //The position of our virtual light, which is used to compute the shading of
                                         //the geometry in the fragment shader.
@@ -103,7 +104,6 @@ void main()
 
     vec3 pos = vs_Pos.xyz / vec3(0.05);
     float noise = perlinNoise(pos) + 0.5;
-    //fs_Col = vec4(noise);
 
     mat3 invTranspose = mat3(u_ModelInvTr);
     fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0);          // Pass the vertex normals to the fragment shader for interpolation.
@@ -111,11 +111,10 @@ void main()
                                                             // model matrix. This is necessary to ensure the normals remain
                                                             // perpendicular to the surface after the surface is transformed by
                                                             // the model matrix.
-    //fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0) * perlinNoise(pos);
-    //vec4 deformedPos = vec4(vs_Pos.x * cos(float(u_Time) * 0.005), vs_Pos.y * sin(float(u_Time) * 0.005), vs_Pos.z* cos(float(u_Time) * 0.005), vs_Pos.a);
-    vec4 animatedNor = vs_Nor * sin(perlinNoise(pos) * float(u_Time) * 0.05);
-    vec4 deformedPos = vec4(vs_Pos.xyz + vec3(animatedNor) * noise, vs_Pos.a);
-    //vec4 deformedPos = vs_Pos;
+
+    vec4 animatedNor = vs_Nor * sin(perlinNoise(pos)* float(u_Time) * 0.05);
+    vec4 deformedPos = vs_Pos + vs_Nor * sin(perlinNoise(pos)* float(u_Time) * 0.05) * 0.5;
+    fs_Pos = deformedPos;
 
     vec4 modelposition = u_Model * deformedPos;   // Temporarily store the transformed vertex positions for use below
 

@@ -12,7 +12,6 @@
 precision highp float;
 
 uniform vec4 u_Color; // The color with which to render this instance of geometry.
-uniform vec3 u_Center;
 uniform int u_Time;
 
 // These are the interpolated values out of the rasterizer, so you can't know
@@ -20,6 +19,7 @@ uniform int u_Time;
 in vec4 fs_Nor;
 in vec4 fs_LightVec;
 in vec4 fs_Col;
+in vec4 fs_Pos;
 
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
@@ -28,7 +28,16 @@ void main()
 {
     // Material base color (before shading)
         vec4 diffuseColor = u_Color;
-        //diffuseColor = vec4(diffuseColor.x, pow(max(diffuseColor.x,0.0),2.0)*0.4, pow(max(diffuseColor.x,0.0),3.0)*0.15 , 1.0);
+        //vec4 animatedColor = vec4(u_Color.x * cos(float(u_Time) * 0.05), u_Color.y , u_Color.z , u_Color.a);
+
+        vec2 resolution = vec2(1225, 893);
+        vec2 uv = gl_FragCoord.xy / resolution;
+        vec2 pos = vec2(0.65,0.5) - uv;
+        pos.y /= resolution.x / resolution.y;
+        float dist = 1.0 / length(fs_Pos);
+        dist *= 0.01;
+        dist = pow(dist, 0.9) * 90.0;
+        vec4 col = mix(u_Color, vec4(1,1,1,1), 1.0 - dist);
 
         // Calculate the diffuse term for Lambert shading
         float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
@@ -42,5 +51,5 @@ void main()
                                                             //lit by our point light are not completely black.
 
         // Compute final shaded color
-        out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);
+        out_Col = vec4(col.rgb * lightIntensity, diffuseColor.a);
 }
