@@ -5,6 +5,15 @@
 </p>
 <p align="center">(source: Ken Perlin)</p>
 
+## Demo
+![Demo](result.gif)
+
+For the yellow flower, I used 3D perlin noise to animate the position along the normal in the vertex shader. I also caculated the distance for every animated pos and used the distance to lerp between the given color and white to create the effect that the center part of the flower looks brighter.
+
+For the background, I use worley noise to create the effect.
+
+Link: https://vivienldy.github.io/hw00-intro-base/
+
 ## Objective
 - Check that the tools and build configuration we will be using for the class works.
 - Start learning Typescript and WebGL2
